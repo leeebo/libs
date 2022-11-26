@@ -1,0 +1,27 @@
+on:
+  workflow_dispatch:
+  
+jobs:
+  my_job:
+    name: deploy to libs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install SSH Key
+      uses: shimataro/ssh-key-action@v2.4.0
+      with:
+        key: ${{ secrets.GITEE_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.KNOWN_HOSTS }}
+    - run: |
+        git config --global user.name "robot"
+        git config --global user.email "libo_go@163.com"
+        git clone git@gitee.com:shubci/libs.git
+        mkdir module
+        cd module
+        git clone git@gitee.com:shubci/cjson.git cJSON
+        cd cJSON
+        cmake -S . -B ./build && cd ./build && make && make install
+        cd ../../../libs
+        git status
+        git add . && git commit -m "auto build"
+        git push --force
+        git log
