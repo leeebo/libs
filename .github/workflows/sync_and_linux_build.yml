@@ -1,5 +1,7 @@
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - master
   
 jobs:
   my_job:
@@ -18,10 +20,19 @@ jobs:
         mkdir module
         cd module
         git clone git@gitee.com:shubci/cjson.git cJSON
+        git clone git@gitee.com:shubci/osal.git
+        git clone git@gitee.com:shubci/trial_manager.git
+        git clone git@gitee.com:shubci/device_manager.git
         cd cJSON
+        cmake -S . -B ./build && cd ./build && make && make install
+        cd ../../osal
+        cmake -S . -B ./build && cd ./build && make && make install
+        cd ../../trial_manager
+        cmake -S . -B ./build && cd ./build && make && make install
+        cd ../../device_manager
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../../libs
         git status
-        git add . && git commit -m "auto build"
+        git add . && git commit -m "ci: auto build & publish"
         git push --force
         git log
