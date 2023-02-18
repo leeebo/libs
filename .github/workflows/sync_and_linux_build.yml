@@ -26,16 +26,22 @@ jobs:
         git clone git@gitee.com:shubci/data_manager.git
         git clone git@gitee.com:shubci/Unity.git unittest
         cd cJSON
+        git submodule update --init --recursive
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../osal
+        git submodule update --init --recursive
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../unittest
+        git submodule update --init --recursive
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../trial_manager
+        git submodule update --init --recursive
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../device_manager
+        git submodule update --init --recursive
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../data_manager
+        git submodule update --init --recursive
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../../libs
         git status
