@@ -23,13 +23,19 @@ jobs:
         git clone git@gitee.com:shubci/osal.git
         git clone git@gitee.com:shubci/trial_manager.git
         git clone git@gitee.com:shubci/device_manager.git
+        git clone git@gitee.com:shubci/data_manager.git
+        git clone git@gitee.com:shubci/Unity.git unittest
         cd cJSON
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../osal
         cmake -S . -B ./build && cd ./build && make && make install
+        cd ../../unittest
+        cmake -S . -B ./build && cd ./build && make && make install
         cd ../../trial_manager
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../device_manager
+        cmake -S . -B ./build && cd ./build && make && make install
+        cd ../../data_manager
         cmake -S . -B ./build && cd ./build && make && make install
         cd ../../../libs
         git status
