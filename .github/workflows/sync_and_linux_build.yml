@@ -4,7 +4,7 @@ on:
       - master
 jobs:
   my_job:
-    name: ${{ matrix.configm.name }}
+    name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
       matrix:
@@ -72,7 +72,7 @@ jobs:
         make install
         cd ../../../libs
         git status
-        git add . && git commit -m "ci: auto build & publish"
+        git add . && git commit -m "ci: auto build windows MinGW & publish"
         git push --force
         git log
       shell: pwsh
@@ -105,7 +105,7 @@ jobs:
         cmake --build ./build --target install
         cd ../../../libs
         git status
-        git add . && git commit -m "ci: auto build & publish"
+        git add . && git commit -m "ci: auto build windows MSVC & publish"
         git push --force
         git log
       shell: pwsh
