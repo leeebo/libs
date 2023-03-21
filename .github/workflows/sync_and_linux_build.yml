@@ -22,9 +22,9 @@ jobs:
       run: |
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
-        git clone git@gitee.com:shubci/libs.git
         mkdir module
         cd module
+        git clone git@gitee.com:shubci/libs.git
         git clone git@gitee.com:shubci/cjson.git cJSON
         git clone git@gitee.com:shubci/osal.git
         git clone git@gitee.com:shubci/trial_manager.git
@@ -36,40 +36,22 @@ jobs:
       run: |
         cd cJSON
         git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build
-        cd ./build
-        make
-        make install
+        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
         cd ../../osal
         git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build
-        cd ./build
-        make
-        make install
+        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
         cd ../../unittest
         git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build
-        cd ./build
-        make
-        make install
+        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
         cd ../../trial_manager
         git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build
-        cd ./build
-        make
-        make install
+        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
         cd ../../device_manager
         git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build
-        cd ./build
-        make
-        make install
+        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
         cd ../../data_manager
         git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build
-        cd ./build
-        make
-        make install
+        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
         cd ../../../libs
         git status
         git add . && git commit -m "ci: auto build windows MinGW & publish"
@@ -81,28 +63,22 @@ jobs:
       run: |
         cd cJSON
         git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build
-        cmake --build ./build --target install
+        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
         cd ../../osal
         git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build
-        cmake --build ./build --target install
+        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
         cd ../../unittest
         git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build
-        cmake --build ./build --target install
+        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
         cd ../../trial_manager
         git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build
-        cmake --build ./build --target install
+        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
         cd ../../device_manager
         git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build
-        cmake --build ./build --target install
+        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
         cd ../../data_manager
         git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build
-        cmake --build ./build --target install
+        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
         cd ../../../libs
         git status
         git add . && git commit -m "ci: auto build windows MSVC & publish"
