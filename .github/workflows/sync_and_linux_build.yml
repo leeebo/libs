@@ -22,9 +22,9 @@ jobs:
       run: |
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
+        git clone git@gitee.com:shubci/libs.git
         mkdir module
         cd module
-        git clone git@gitee.com:shubci/libs.git
         git clone git@gitee.com:shubci/cjson.git cJSON
         git clone git@gitee.com:shubci/osal.git
         git clone git@gitee.com:shubci/trial_manager.git
