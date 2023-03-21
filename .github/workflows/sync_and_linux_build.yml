@@ -35,6 +35,7 @@ jobs:
       if: startsWith(matrix.config.name, 'MINGW')
       run: |
         dir
+        cd module
         cd cJSON
         git submodule update --init --recursive
         cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
@@ -63,6 +64,7 @@ jobs:
       if: startsWith(matrix.config.name, 'MSVC')
       run: |
         dir
+        cd module
         cd cJSON
         git submodule update --init --recursive
         cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
@@ -91,6 +93,7 @@ jobs:
       if: startsWith(matrix.config.name, 'LINUX')
       run: |
         ls
+        cd module
         cd cJSON
         git submodule update --init --recursive
         cmake -S . -B ./build && cd ./build && make && make install
