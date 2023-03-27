@@ -9,9 +9,9 @@ jobs:
     strategy:
       matrix:
         config:
-        - {name: "MINGW", os: "windows-latest"}
-        - {name: "MSVC", os: "windows-latest"}
-        - {name: "LINUX", os: "ubuntu-latest"}
+        - {name: "MINGW", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles", makecommand: "make"}
+        - {name: "MSVC", os: "windows-latest", command: "-G", compiler: "Visual Stuido 17 2022", makecommand: "cmake --build"}
+        - {name: "LINUX", os: "ubuntu-latest", command: "", compiler: "", makecommand: "make"}
     steps:
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2.4.0
@@ -31,89 +31,46 @@ jobs:
         git clone git@gitee.com:shubci/device_manager.git
         git clone git@gitee.com:shubci/data_manager.git
         git clone git@gitee.com:shubci/Unity.git unittest
-    - name: MINGW
-      if: startsWith(matrix.config.name, 'MINGW')
-      run: |
-        dir
-        cd module
-        cd cJSON
-        git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
-        cd ../../osal
-        git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
-        cd ../../unittest
-        git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
-        cd ../../trial_manager
-        git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
-        cd ../../device_manager
-        git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
-        cd ../../data_manager
-        git submodule update --init --recursive
-        cmake -G "MinGW Makefiles" -S . -B ./build && cd ./build && make && make install
-        cd ../../../libs
-        git status
-        git add . && git commit -m "ci: auto build windows MinGW & publish"
-        git push --force
-        git log
-      shell: pwsh
-    - name: MSVC
-      if: startsWith(matrix.config.name, 'MSVC')
-      run: |
-        dir
-        cd module
-        cd cJSON
-        git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
-        cd ../../osal
-        git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
-        cd ../../unittest
-        git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
-        cd ../../trial_manager
-        git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
-        cd ../../device_manager
-        git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
-        cd ../../data_manager
-        git submodule update --init --recursive
-        cmake -G "Visual Studio 17 2022" -S . -B ./build && cd ./build && make && make install
-        cd ../../../libs
-        git status
-        git add . && git commit -m "ci: auto build windows MSVC & publish"
-        git push --force
-        git log
-      shell: pwsh
-    - name: LINUX
-      if: startsWith(matrix.config.name, 'LINUX')
+
+    - name: BUILD AND INSTALL
       run: |
         ls
         cd module
         cd cJSON
         git submodule update --init --recursive
-        cmake -S . -B ./build && cd ./build && make && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
         cd ../../osal
         git submodule update --init --recursive
-        cmake -S . -B ./build && cd ./build && make && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
         cd ../../unittest
         git submodule update --init --recursive
-        cmake -S . -B ./build && cd ./build && make && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
         cd ../../trial_manager
         git submodule update --init --recursive
-        cmake -S . -B ./build && cd ./build && make && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
         cd ../../device_manager
         git submodule update --init --recursive
-        cmake -S . -B ./build && cd ./build && make && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
         cd ../../data_manager
         git submodule update --init --recursive
-        cmake -S . -B ./build && cd ./build && make && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
         cd ../../../libs
         git status
-        git add . && git commit -m "ci: auto build & publish"
+        git add . && git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.name}} & publish"
         git push --force
         git log
+      shell: pwsh
+    - name: MINGW
+      if: startsWith(matrix.config.name, 'MINGW')
+      run: |
+        ${{github.action_path}}
+      shell: pwsh
+    - name: MSVC
+      if: startsWith(matrix.config.name, 'MSVC')
+      run: |
+        ${{github.action_path}}
+      shell: pwsh
+    - name: LINUX
+      if: startsWith(matrix.config.name, 'LINUX')
+      run: |
+        ${{github.action_path}}
