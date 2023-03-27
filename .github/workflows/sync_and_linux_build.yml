@@ -4,9 +4,9 @@ on:
       - master
 jobs:
   my_job:
-    name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     strategy:
+      fail-fast: false
       matrix:
         config:
         - {name: "MINGW", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles", makecommand: "make"}
@@ -38,39 +38,24 @@ jobs:
         cd module
         cd cJSON
         git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} install
         cd ../../osal
         git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} install
         cd ../../unittest
         git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} install
         cd ../../trial_manager
         git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} install
         cd ../../device_manager
         git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} install
         cd ../../data_manager
         git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} && make install
+        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cd ./build && ${{matrix.config.makecommand}} install
         cd ../../../libs
         git status
         git add . && git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.name}} & publish"
         git push --force
         git log
-      shell: pwsh
-    - name: MINGW
-      if: startsWith(matrix.config.name, 'MINGW')
-      run: |
-        ${{github.action_path}}
-      shell: pwsh
-    - name: MSVC
-      if: startsWith(matrix.config.name, 'MSVC')
-      run: |
-        ${{github.action_path}}
-      shell: pwsh
-    - name: LINUX
-      if: startsWith(matrix.config.name, 'LINUX')
-      run: |
-        ${{github.action_path}}
