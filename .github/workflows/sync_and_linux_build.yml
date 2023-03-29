@@ -10,7 +10,7 @@ jobs:
       matrix:
         config:
         - {name: "MINGW", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles", makecommand: "make"}
-        - {name: "MSVC", os: "windows-latest", command: "-G", compiler: "Visual Stuido 17 2022", makecommand: "cmake --build"}
+        - {name: "MSVC", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022", makecommand: "cmake --build"}
         - {name: "LINUX", os: "ubuntu-latest", command: "", compiler: "", makecommand: "make"}
     steps:
     - name: Install SSH Key
