@@ -39,23 +39,22 @@ jobs:
         cd cJSON
         git submodule update --init --recursive
         cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../../osal
+        cd ../osal
         git submodule update --init --recursive
         cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../../unittest
+        cd ../unittest
         git submodule update --init --recursive
         cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../../trial_manager
+        cd ../trial_manager
         git submodule update --init --recursive
         cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../../device_manager
+        cd ../device_manager
         git submodule update --init --recursive
         cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../../data_manager
+        cd ../data_manager
         git submodule update --init --recursive
         cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../../../libs
+        cd ../../libs
         git status
-        git add --all && git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.name}} & publish"
-        git push --force
+        git add --all && git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.name}} & publish" && git push --force
         git log
