@@ -54,7 +54,11 @@ jobs:
         cd ../data_manager
         git submodule update --init --recursive
         cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../../libs
+    - name: GIT-PUSH
+      run: |
+        ls
+        cd libs
         git status
-        git add --all && git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.name}} & publish" && git push --force
+        git add --all && git status
+        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.name}} & publish" && git config pull.rebase true && git pull && git push
         git log
