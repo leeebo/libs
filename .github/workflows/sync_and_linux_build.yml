@@ -9,56 +9,46 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        - {name: "MINGW", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
-        - {name: "MSVC", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
-        - {name: "LINUX", os: "ubuntu-latest", command: "", compiler: ""}
+          - {path: "windows/mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
+          - {path: "windows/msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
+          - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
+        module:
+          - 'cJSON'
+          - 'osal'
+          - 'unittest'
+          - 'trial_manager'
+          - 'device_manager'
+          - 'data_manager'
     steps:
-    - name: Install SSH Key
-      uses: shimataro/ssh-key-action@v2.4.0
-      with:
-        key: ${{ secrets.GITEE_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.KNOWN_HOSTS }}
-    - name: GIT-CLONE
-      run: |
-        git config --global user.name "robot"
-        git config --global user.email "libo_go@163.com"
-        git clone git@gitee.com:shubci/libs.git
-        mkdir module
-        cd module
-        git clone git@gitee.com:shubci/cjson.git cJSON
-        git clone git@gitee.com:shubci/osal.git
-        git clone git@gitee.com:shubci/trial_manager.git
-        git clone git@gitee.com:shubci/device_manager.git
-        git clone git@gitee.com:shubci/data_manager.git
-        git clone git@gitee.com:shubci/Unity.git unittest
-
-    - name: BUILD AND INSTALL
-      run: |
-        ls
-        cd module
-        cd cJSON
-        git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../osal
-        git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../unittest
-        git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../trial_manager
-        git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../device_manager
-        git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-        cd ../data_manager
-        git submodule update --init --recursive
-        cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build && cmake --build ./build && cmake --build ./build --target install 
-    - name: GIT-PUSH
-      run: |
-        ls
-        cd libs
-        git status
-        git add --all && git status
-        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.name}} & publish" && git config pull.rebase true && git pull && git push
-        git log
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2.4.0
+        with:
+          key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - name: GIT-CLONE
+        run: |
+          git config --global user.name "robot"
+          git config --global user.email "libo_go@163.com"
+          git clone git@gitee.com:shubci/libs.git
+          mkdir module
+          cd module
+          if [ "${{ matrix.module }}" == "cJSON" ]; then
+            giturl=cjson
+          elif [ "${{ matrix.module }}" == "unittest"]; then
+            giturl=Unity
+          else
+            giturl=${{ matrix.module }}
+          fi
+          git clone git@gitee.com:shubci/$giturl.git ${{ matrix.module }}
+      - name: BUILD AND INSTALL
+        run: |
+          cd module/${{ matrix.module }}
+          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log && cmake --build ./build --target install 2>&1 | tee -a ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log
+      - name: GIT-PUSH
+        run: |
+          ls
+          cd libs
+          git status
+          git add --all && git status
+          git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push
+          git log
