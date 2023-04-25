@@ -41,10 +41,24 @@ jobs:
             giturl=${{ matrix.module }}
           fi
           git clone git@gitee.com:shubci/$giturl.git ${{ matrix.module }}
+      - name: Create markdown file
+        run: |
+          cd libs
+          echo "| module | compiler | old version | new version | cmake result | build.log |" > result.md
+          echo "| :------: | :------: | :------: | :------: | :------: | :------: |" >> result.md
       - name: BUILD AND INSTALL
         run: |
           cd module/${{ matrix.module }}
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log && cmake --build ./build --target install 2>&1 | tee -a ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log
+          new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          old_version=$(grep "VERSION" ../../libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          cd ../../libs
+          if [ $? -ne 0 ] || [ "$(echo -e "$old_version\n$new_version" | sort -V | tail -n1)" = "$old_version" ]
+          then
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style=\"color:red\">failed</span> | <link text>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log "build_information") |" >> result.md
+          else
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style=\"color:green\">succeeded</span> | <link text>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log "build_information") |" >> result.md
+          fi
       - name: GIT-PUSH
         run: |
           ls
