@@ -55,9 +55,9 @@ jobs:
           cd ../../libs
           if [ $? -ne 0 ] || [ "$(echo -e "$old_version\n$new_version" | sort -V | tail -n1)" = "$old_version" ]
           then
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style=\"color:red\">failed</span> | <build_information>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style="color:red">&#x274C; failed</span> | <build_information>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
           else
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style=\"color:green\">succeeded</span> | <build_information>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style="color:green">&#x2705; succeeded</span> | <build_information>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
           fi
           git status
           git add --all && git status
