@@ -97,6 +97,8 @@ jobs:
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
     - name: PUSH
       run: |
+        git config --global user.name "robot"
+        git config --global user.email "libo_go@163.com"
         git status
         git add --all && git status
         git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push
