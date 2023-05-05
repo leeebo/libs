@@ -3,22 +3,8 @@ on:
     branches:
       - master
 jobs:
-  my_job:
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {path: "windows/mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
-          - {path: "windows/msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
-          - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
-        module:
-          - 'cJSON'
-          - 'osal'
-          - 'unittest'
-          - 'trial_manager'
-          - 'device_manager'
-          - 'data_manager'
+  clone_repository:
+    runs-on: ubuntu-latest
     steps:
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2.4.0
@@ -46,7 +32,37 @@ jobs:
           cd libs
           echo "| module | compiler | old version | new version | cmake result | build.log |" > result.md
           echo "| :------: | :------: | :------: | :------: | :------: | :------: |" >> result.md
-      - name: BUILD AND INSTALL AND PUSH
+      - name: Archive result
+        uses: actions/upload-artifact@v2
+        with:
+          name: cloned_files
+          path: | 
+            libs
+            module
+  process_repository:
+    needs: clone_repository
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {path: "windows/mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
+          - {path: "windows/msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
+          - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
+        module:
+          - 'cJSON'
+          - 'osal'
+          - 'unittest'
+          - 'trial_manager'
+          - 'device_manager'
+          - 'data_manager'
+      max-parallel: 1
+    steps:
+      - name: Download result
+        uses: actions/download-artifact@v2
+        with:
+          name: cloned_files
+      - name: BUILD AND INSTALL
         run: |
           cd module/${{ matrix.module }}
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log && cmake --build ./build --target install 2>&1 | tee -a ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log
@@ -55,11 +71,33 @@ jobs:
           cd ../../libs
           if [ $? -ne 0 ] || [ "$(echo -e "$old_version\n$new_version" | sort -V | tail -n1)" = "$old_version" ]
           then
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style="color:red">&#x274C; failed</span> | <build_information>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style="color:red">&#x274C; failed</span> | [build_information](./libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
           else
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style="color:green">&#x2705; succeeded</span> | <build_information>(/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style="color:green">&#x2705; succeeded</span> | [build_information](./libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
           fi
-          git status
-          git add --all && git status
-          git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push
-          git log
+      - name: Archive result
+        uses: actions/upload-artifact@v2
+        with:
+          name: cloned_files
+          path: | 
+            libs
+            module
+  push_repository:
+    needs: process_repository
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download result
+      uses: actions/download-artifact@v2
+      with:
+        name: cloned_files
+    - name: Install SSH Key
+      uses: shimataro/ssh-key-action@v2.4.0
+      with:
+        key: ${{ secrets.GITEE_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.KNOWN_HOSTS }}
+    - name: PUSH
+      run: |
+        git status
+        git add --all && git status
+        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push
+        git log
