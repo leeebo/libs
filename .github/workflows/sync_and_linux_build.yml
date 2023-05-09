@@ -5,6 +5,16 @@ on:
 jobs:
   clone_repository:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - 'cJSON'
+          - 'osal'
+          - 'unittest'
+          - 'trial_manager'
+          - 'device_manager'
+          - 'data_manager'
     steps:
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2.4.0
@@ -32,13 +42,16 @@ jobs:
           cd libs
           echo "| module | compiler | old version | new version | cmake result | build.log |" > result.md
           echo "| :------: | :------: | :------: | :------: | :------: | :------: |" >> result.md
-      - name: Archive result
+      - name: Archive libs
         uses: actions/upload-artifact@v2
         with:
-          name: cloned_files
-          path: | 
-            libs
-            module
+          name: cloned_libs
+          path: libs
+      - name: Archive module
+        uses: actions/upload-artifact@v2
+        with:
+          name: cloned_module
+          path: module
   process_repository:
     needs: clone_repository
     runs-on: ${{ matrix.config.os }}
@@ -58,10 +71,16 @@ jobs:
           - 'data_manager'
       max-parallel: 1
     steps:
-      - name: Download result
+      - name: Download cloned_libs
         uses: actions/download-artifact@v2
         with:
-          name: cloned_files
+          name: cloned_libs
+          path: libs
+      - name: Download cloned_module
+        uses: actions/download-artifact@v2
+        with:
+          name: cloned_module
+          path: module
       - name: BUILD AND INSTALL
         run: |
           cd module/${{ matrix.module }}
@@ -75,21 +94,25 @@ jobs:
           else
             echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $old_version | $new_version | <span style="color:green">&#x2705; succeeded</span> | [build_information](./libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
           fi
-      - name: Archive result
+      - name: Archive libs
         uses: actions/upload-artifact@v2
         with:
-          name: cloned_files
-          path: | 
-            libs
-            module
+          name: cloned_libs
+          path: libs
   push_repository:
     needs: process_repository
     runs-on: ubuntu-latest
     steps:
-    - name: Download result
+    - name: Download cloned_libs
       uses: actions/download-artifact@v2
       with:
-        name: cloned_files
+        name: cloned_libs
+        path: libs
+    - name: Download cloned_module
+      uses: actions/download-artifact@v2
+      with:
+        name: cloned_module
+        path: module
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2.4.0
       with:
