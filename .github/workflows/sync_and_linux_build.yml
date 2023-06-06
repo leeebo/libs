@@ -90,9 +90,9 @@ jobs:
           cd ../../libs
           if [ $? -ne 0 ]
           then
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style=\"color:red\">failed</span> | [build information](/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log "build.log") |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
           else
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style=\"color:green\">succeeded</span> | [build information](/libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log "build.log") |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
           fi
       - name: Archive libs
         uses: actions/upload-artifact@v2
