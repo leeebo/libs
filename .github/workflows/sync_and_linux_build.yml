@@ -82,6 +82,7 @@ jobs:
           name: cloned_module
           path: module
       - name: BUILD AND INSTALL
+        shell: bash
         run: |
           cd module/${{ matrix.module }}
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log && cmake --build ./build --target install 2>&1 | tee -a ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log
