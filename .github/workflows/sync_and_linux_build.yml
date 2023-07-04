@@ -128,6 +128,7 @@ jobs:
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
     - name: PUSH
       run: |
+        cd libs
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
         git status
