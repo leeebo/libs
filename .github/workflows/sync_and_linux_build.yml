@@ -88,6 +88,7 @@ jobs:
           cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log
       - name: build result
         if: always()
+        shell: bash
         run: |
           cd module/${{ matrix.module }}
           available_version=$(grep "VERSION" ../../libs/bin/${{ matrix.config.path }}/${{ matrix.module }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
