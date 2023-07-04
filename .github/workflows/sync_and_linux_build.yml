@@ -31,7 +31,7 @@ jobs:
           cd module
           if [ "${{ matrix.module }}" = "cJSON" ]; then
             giturl=cjson
-          elif [ "${{ matrix.module }}" = "unittest"]; then
+          elif [ "${{ matrix.module }}" = "unittest" ]; then
             giturl=Unity
           else
             giturl=${{ matrix.module }}
