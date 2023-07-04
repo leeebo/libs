@@ -26,12 +26,12 @@ jobs:
         run: |
           git config --global user.name "robot"
           git config --global user.email "libo_go@163.com"
-          git clone git@gitee.com:shubci/libs.git
+          git clone -b Lhz git@gitee.com:shubci/libs.git
           mkdir module
           cd module
           if [ "${{ matrix.module }}" = "cJSON" ]; then
             giturl=cjson
-          elif [ "${{ matrix.module }}" = "unittest" ]; then
+          elif [ "${{ matrix.module }}" = "unittest"]; then
             giturl=Unity
           else
             giturl=${{ matrix.module }}
@@ -59,8 +59,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {path: "windows/mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
-          - {path: "windows/msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
+          - {path: "mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
+          - {path: "msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
           - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
         module:
           - 'cJSON'
@@ -82,19 +82,25 @@ jobs:
           name: cloned_module
           path: module
       - name: BUILD AND INSTALL
-        shell: bash
         run: |
           cd module/${{ matrix.module }}
-          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log && cmake --build ./build --target install 2>&1 | tee -a ../../libs/dll/${{matrix.config.path}}/${{ matrix.module }}/build.log
-          available_version=$(grep "VERSION" ../../libs/dll/${{ matrix.config.path }}/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log 
+          cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log
+      - name: build result
+        if: always()
+        run: |
+          cd module/${{ matrix.module }}
+          available_version=$(grep "VERSION" ../../libs/bin/${{ matrix.config.path }}/${{ matrix.module }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
           cd ../../libs
-          if [ $? -ne 0 ]
+          if [ "$available_version" != "$new_version" ]
           then
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style=\"color:red\">failed</span> | [build information](/libs/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log "build.log") |" >> result.md
           else
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/dll/${{ matrix.config.path }}/${{ matrix.module }}/build.log) |" >> result.md
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style=\"color:green\">succeeded</span> | [build information](/libs/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log "build.log") |" >> result.md
           fi
       - name: Archive libs
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: cloned_libs
@@ -109,18 +115,21 @@ jobs:
       with:
         name: cloned_libs
         path: libs
+    - name: Download cloned_module
+      uses: actions/download-artifact@v2
+      with:
+        name: cloned_module
+        path: module
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2.4.0
       with:
         key: ${{ secrets.GITEE_PRIVATE_KEY }}
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
     - name: PUSH
-      shell: bash
       run: |
-        cd libs
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
         git status
         git add --all && git status
-        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push
+        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
         git log
