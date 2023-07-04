@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         module:
-          - 'cJSON'
+          - 'cjson'
           - 'osal'
           - 'unittest'
           - 'trial_manager'
@@ -29,14 +29,7 @@ jobs:
           git clone -b Lhz git@gitee.com:shubci/libs.git
           mkdir module
           cd module
-          if [ "${{ matrix.module }}" = "cJSON" ]; then
-            giturl=cjson
-          elif [ "${{ matrix.module }}" = "unittest" ]; then
-            giturl=Unity
-          else
-            giturl=${{ matrix.module }}
-          fi
-          git clone git@gitee.com:shubci/$giturl.git ${{ matrix.module }}
+          git clone git@gitee.com:shubci/${{ matrix.module }}.git
       - name: Create markdown file
         run: |
           cd libs
@@ -63,7 +56,7 @@ jobs:
           - {path: "msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
           - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
         module:
-          - 'cJSON'
+          - 'cjson'
           - 'osal'
           - 'unittest'
           - 'trial_manager'
