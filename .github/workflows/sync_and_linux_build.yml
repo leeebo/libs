@@ -79,6 +79,7 @@ jobs:
           cd module/${{ matrix.module }}
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log 
           cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log
+          # cmake --build ./build --target package
       - name: build result
         if: always()
         shell: bash
