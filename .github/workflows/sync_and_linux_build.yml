@@ -29,7 +29,7 @@ jobs:
           git clone --recursive -b master git@gitee.com:shubci/libs.git
           mkdir module
           cd module
-          git clone git@gitee.com:shubci/${{ matrix.module }}.git
+          git clone --recursive git@gitee.com:shubci/${{ matrix.module }}.git
       - name: Create markdown file
         run: |
           cd libs
