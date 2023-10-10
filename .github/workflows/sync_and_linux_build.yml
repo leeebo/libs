@@ -105,20 +105,25 @@ jobs:
             cd module/${{ matrix.module }}/${{ matrix.drivers_contain }}
             available_version=$(grep "VERSION" ../../../libs/bin/${{ matrix.config.path }}/${{ matrix.drivers_contain }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
             new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-            module_newname=${{matrix.drivers_contain}}
             cd ../../../libs
+            if [ "$available_version" != "$new_version" ]
+            then
+              echo "| ${{ matrix.drivers_contain }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.drivers_contain }}_${{ matrix.config.path }}.log) |" >> result.md
+            else
+              echo "| ${{ matrix.drivers_contain }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.drivers_contain }}_${{ matrix.config.path }}.log) |" >> result.md
+            fi
           else
             cd module/${{ matrix.module }}
             available_version=$(grep "VERSION" ../../libs/bin/${{ matrix.config.path }}/${{ matrix.module }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
             new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
             module_newname=${{matrix.module}}
             cd ../../libs
-          if [ "$available_version" != "$new_version" ]
-          then
-            echo "| ${{ module_newname }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ module_newname }}_${{ matrix.config.path }}.log) |" >> result.md
-          else
-            echo "| ${{ module_newname }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ module_newname }}_${{ matrix.config.path }}.log) |" >> result.md
-          fi
+            if [ "$available_version" != "$new_version" ]
+            then
+              echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
+            else
+              echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
+            fi
       - name: Archive libs
         if: always()
         uses: actions/upload-artifact@v2
