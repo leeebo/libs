@@ -17,7 +17,6 @@ jobs:
           - 'trial_manager'
           - 'device_manager'
           - 'data_manager'
-          - 'drivers'
     steps:
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2.4.0
@@ -65,13 +64,6 @@ jobs:
           - 'trial_manager'
           - 'device_manager'
           - 'data_manager'
-          - 'drivers'
-        drivers_contain:
-          - 'driver_eeg'
-          - 'eeg'
-          - 'general'
-          - 'robot'
-          - 'vr'
       max-parallel: 1
     steps:
       - name: Download cloned_libs
@@ -86,45 +78,23 @@ jobs:
           path: module
       - name: BUILD AND INSTALL
         run: |
-          if [ "${{matrix.module}}" == "drivers" ]
-          then
-            cd module/${{ matrix.module }}/${{ matrix.drivers_contain }}
-            cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../../libs/bin/${{matrix.config.path}}/build_${{ matrix.drivers_contain }}_${{ matrix.config.path }}.log 
-            cmake --build ./build --target install 2>&1 | tee -a ../../../libs/bin/${{matrix.config.path}}/build_${{ matrix.drivers_contain }}_${{ matrix.config.path }}.log
-          else
-            cd module/${{ matrix.module }}
-            cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log 
-            cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log
-          fi
+          cd module/${{ matrix.module }}
+          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log 
+          cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
       - name: build result
         if: always()
         shell: bash
         run: |
-          if [ "${{matrix.module}}" == "drivers" ]
+          cd module/${{ matrix.module }}
+          available_version=$(grep "VERSION" ../../libs/bin/${{ matrix.config.path }}/${{ matrix.module }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          cd ../../libs
+          if [ "$available_version" != "$new_version" ]
           then
-            cd module/${{ matrix.module }}/${{ matrix.drivers_contain }}
-            available_version=$(grep "VERSION" ../../../libs/bin/${{ matrix.config.path }}/${{ matrix.drivers_contain }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-            new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-            cd ../../../libs
-            if [ "$available_version" != "$new_version" ]
-            then
-              echo "| ${{ matrix.drivers_contain }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.drivers_contain }}_${{ matrix.config.path }}.log) |" >> result.md
-            else
-              echo "| ${{ matrix.drivers_contain }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.drivers_contain }}_${{ matrix.config.path }}.log) |" >> result.md
-            fi
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
           else
-            cd module/${{ matrix.module }}
-            available_version=$(grep "VERSION" ../../libs/bin/${{ matrix.config.path }}/${{ matrix.module }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-            new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-            module_newname=${{matrix.module}}
-            cd ../../libs
-            if [ "$available_version" != "$new_version" ]
-            then
-              echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
-            else
-              echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
-            fi
+            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
           fi
       - name: Archive libs
         if: always()
