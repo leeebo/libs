@@ -84,7 +84,7 @@ jobs:
       - name: BUILD AND INSTALL
         run: |
           cd module/${{ matrix.module }}
-          module_name = (Get-Item "module/${{ matrix.module }}").Name
+          module_name = (Get-Item .).Name
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log 
           cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
@@ -92,7 +92,10 @@ jobs:
         if: always()
         shell: bash
         run: |
-          module_name = $(basename "module/${{ matrix.module }}")
+          originalDirectory=$(pwd)
+          cd module/${{ matrix.module }}
+          module_name=$(basename ".")
+          cd "$originalDirectory"
           cd libs/bin/${{ matrix.config.path }}
           available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
           new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
