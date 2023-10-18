@@ -60,11 +60,11 @@ jobs:
           - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
         module:
           - 'cjson'
-          # - 'osal'
-          # - 'unittest'
-          # - 'trial_manager'
-          # - 'device_manager'
-          # - 'data_manager'
+          - 'osal'
+          - 'unittest'
+          - 'trial_manager'
+          - 'device_manager'
+          - 'data_manager'
           - 'drivers/driver_eeg'
           - 'drivers/robot'
           - 'drivers/general'
@@ -103,9 +103,9 @@ jobs:
           new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
           if [ "$available_version" != "$new_version" ]
           then
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
+            echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
           else
-            echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
+            echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
           fi
       - name: Archive libs
         if: always()
@@ -113,32 +113,32 @@ jobs:
         with:
           name: cloned_libs
           path: libs
-  # push_repository:
-  #   needs: process_repository
-  #   runs-on: ubuntu-latest
-  #   if: always()
-  #   steps:
-  #   - name: Download cloned_libs
-  #     uses: actions/download-artifact@v2
-  #     with:
-  #       name: cloned_libs
-  #       path: libs
-  #   - name: Download cloned_module
-  #     uses: actions/download-artifact@v2
-  #     with:
-  #       name: cloned_module
-  #       path: module
-  #   - name: Install SSH Key
-  #     uses: shimataro/ssh-key-action@v2.4.0
-  #     with:
-  #       key: ${{ secrets.GITEE_PRIVATE_KEY }}
-  #       known_hosts: ${{ secrets.KNOWN_HOSTS }}
-    # - name: PUSH
-    #   run: |
-    #     cd libs
-    #     git config --global user.name "robot"
-    #     git config --global user.email "libo_go@163.com"
-    #     git status
-    #     git add --all && git status
-    #     git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin master
-    #     git log
+  push_repository:
+    needs: process_repository
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Download cloned_libs
+      uses: actions/download-artifact@v2
+      with:
+        name: cloned_libs
+        path: libs
+    - name: Download cloned_module
+      uses: actions/download-artifact@v2
+      with:
+        name: cloned_module
+        path: module
+    - name: Install SSH Key
+      uses: shimataro/ssh-key-action@v2.4.0
+      with:
+        key: ${{ secrets.GITEE_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.KNOWN_HOSTS }}
+    - name: PUSH
+      run: |
+        cd libs
+        git config --global user.name "robot"
+        git config --global user.email "libo_go@163.com"
+        git status
+        git add --all && git status
+        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin master
+        git log
