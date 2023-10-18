@@ -84,7 +84,7 @@ jobs:
       - name: BUILD AND INSTALL
         run: |
           cd module/${{ matrix.module }}
-          module_name=$(basename "${{ matrix.module }}")
+          module_name = (Get-Item "${{ matrix.module }}").Name
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log 
           cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
