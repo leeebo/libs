@@ -17,6 +17,7 @@ jobs:
           - 'trial_manager'
           - 'device_manager'
           - 'data_manager'
+          - 'drivers'
     steps:
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2.4.0
@@ -64,6 +65,10 @@ jobs:
           - 'trial_manager'
           - 'device_manager'
           - 'data_manager'
+          - 'drivers/driver_eeg'
+          - 'drivers/robot'
+          - 'drivers/general'
+          - 'drivers/vr'
       max-parallel: 1
     steps:
       - name: Download cloned_libs
@@ -79,17 +84,18 @@ jobs:
       - name: BUILD AND INSTALL
         run: |
           cd module/${{ matrix.module }}
-          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log 
-          cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${{ matrix.module }}_${{ matrix.config.path }}.log
+          module_name=$(basename "${{ matrix.module }}")
+          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log 
+          cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
       - name: build result
         if: always()
         shell: bash
         run: |
-          cd module/${{ matrix.module }}
-          available_version=$(grep "VERSION" ../../libs/bin/${{ matrix.config.path }}/${{ matrix.module }}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-          new_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-          cd ../../libs
+          module_name = $(basename "${{ matrix.module }}")
+          cd libs/bin/${{ matrix.config.path }}
+          available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
           if [ "$available_version" != "$new_version" ]
           then
             echo "| ${{ matrix.module }} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
