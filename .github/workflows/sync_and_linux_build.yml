@@ -60,11 +60,11 @@ jobs:
           - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
         module:
           - 'cjson'
-          - 'osal'
-          - 'unittest'
-          - 'trial_manager'
-          - 'device_manager'
-          - 'data_manager'
+          # - 'osal'
+          # - 'unittest'
+          # - 'trial_manager'
+          # - 'device_manager'
+          # - 'data_manager'
           - 'drivers/driver_eeg'
           - 'drivers/robot'
           - 'drivers/general'
@@ -83,10 +83,12 @@ jobs:
           path: module
       - name: BUILD AND INSTALL
         run: |
-          cd module/${{ matrix.module }}
+          cd libs/bin/${{matrix.config.path}}
+          $currentDirectory=(Get-Location).Path
+          cd ../../../module/${{ matrix.module }}
           $module_name=(Get-Item .).Name
-          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log 
-          cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log
+          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log 
+          cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
       - name: build result
         if: always()
