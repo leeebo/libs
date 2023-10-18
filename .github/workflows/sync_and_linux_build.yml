@@ -102,6 +102,7 @@ jobs:
           cd libs/bin/${{ matrix.config.path }}
           available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
           new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+          cd ${originalDirectory}/libs
           if [ "$available_version" != "$new_version" ]
           then
             echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | [build information](/bin/${{ matrix.config.path }}/build_${{ matrix.module }}_${{ matrix.config.path }}.log) |" >> result.md
