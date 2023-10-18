@@ -84,7 +84,7 @@ jobs:
       - name: BUILD AND INSTALL
         run: |
           cd module/${{ matrix.module }}
-          module_name = (Get-Item "${{ matrix.module }}").Name
+          module_name = (Get-Item "${GITHUB_WORKSPACE}/module/${{ matrix.module }}").Name
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log 
           cmake --build ./build --target install 2>&1 | tee -a ../../libs/bin/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
@@ -92,7 +92,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          module_name = $(basename "${{ matrix.module }}")
+          module_name = $(basename "${GITHUB_WORKSPACE}/module/${{ matrix.module }}")
           cd libs/bin/${{ matrix.config.path }}
           available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
           new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
@@ -108,32 +108,32 @@ jobs:
         with:
           name: cloned_libs
           path: libs
-  push_repository:
-    needs: process_repository
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-    - name: Download cloned_libs
-      uses: actions/download-artifact@v2
-      with:
-        name: cloned_libs
-        path: libs
-    - name: Download cloned_module
-      uses: actions/download-artifact@v2
-      with:
-        name: cloned_module
-        path: module
-    - name: Install SSH Key
-      uses: shimataro/ssh-key-action@v2.4.0
-      with:
-        key: ${{ secrets.GITEE_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.KNOWN_HOSTS }}
-    - name: PUSH
-      run: |
-        cd libs
-        git config --global user.name "robot"
-        git config --global user.email "libo_go@163.com"
-        git status
-        git add --all && git status
-        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin master
-        git log
+  # push_repository:
+  #   needs: process_repository
+  #   runs-on: ubuntu-latest
+  #   if: always()
+  #   steps:
+  #   - name: Download cloned_libs
+  #     uses: actions/download-artifact@v2
+  #     with:
+  #       name: cloned_libs
+  #       path: libs
+  #   - name: Download cloned_module
+  #     uses: actions/download-artifact@v2
+  #     with:
+  #       name: cloned_module
+  #       path: module
+  #   - name: Install SSH Key
+  #     uses: shimataro/ssh-key-action@v2.4.0
+  #     with:
+  #       key: ${{ secrets.GITEE_PRIVATE_KEY }}
+  #       known_hosts: ${{ secrets.KNOWN_HOSTS }}
+    # - name: PUSH
+    #   run: |
+    #     cd libs
+    #     git config --global user.name "robot"
+    #     git config --global user.email "libo_go@163.com"
+    #     git status
+    #     git add --all && git status
+    #     git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin master
+    #     git log
