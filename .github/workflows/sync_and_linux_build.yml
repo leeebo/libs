@@ -87,7 +87,7 @@ jobs:
           $currentDirectory=(Get-Location).Path
           cd ../../../module/${{ matrix.module }}
           $module_name=(Get-Item .).Name
-          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/${{matrix.config.path}}/build_${module_name}_${{ matrix.config.path }}.log 
+          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log 
           cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
       - name: build result
