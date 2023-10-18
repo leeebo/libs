@@ -94,7 +94,7 @@ jobs:
         run: |
           originalDirectory=$(pwd)
           cd module/${{ matrix.module }}
-          module_name=$(basename ".")
+          module_name=$(basename "$(pwd)")
           cd "$originalDirectory"
           cd libs/bin/${{ matrix.config.path }}
           available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
