@@ -82,11 +82,12 @@ jobs:
           name: cloned_module
           path: module
       - name: BUILD AND INSTALL
+        shell: bash
         run: |
           cd libs/bin/${{matrix.config.path}}
-          $currentDirectory=(Get-Location).Path
+          currentDirectory=$(pwd)
           cd ../../../module/${{ matrix.module }}
-          $module_name=(Get-Item .).Name
+          module_name=$(basename "$(pwd)")
           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log 
           cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
           # cmake --build ./build --target package
