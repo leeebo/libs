@@ -17,15 +17,15 @@ jobs:
         id: set-output-modules
         shell: bash
         run: |
-          # modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager')
-          modules=('cjson')
+          modules=( 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager' 'algorithm_manager' )
           git config --global user.name "robot"
           git config --global user.email "libo_go@163.com"
           git clone --recursive -b Lhz git@gitee.com:shubci/libs.git
           mkdir module
           cd module
+          git clone --recursive -b Lhz git@gitee.com:shubci/cjson.git
           for modulename in "${modules[@]}"; do
-            git clone --recursive -b Lhz git@gitee.com:shubci/${modulename%/*}.git
+            git clone --recursive -b master git@gitee.com:shubci/${modulename%/*}.git
           done
       - name: Create markdown file
         run: |
@@ -72,8 +72,7 @@ jobs:
       - name: BUILD AND INSTALL
         shell: bash
         run: |
-          # modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager')
-          modules=( 'cjson' )
+          modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager' 'algorithm_manager' )
           cd libs
           resultpath=$(pwd)/result.md
           cd bin/${{matrix.config.path}}
