@@ -7,8 +7,6 @@ on:
 jobs:
   clone_repository:
     runs-on: ubuntu-latest
-    outputs:
-      modules: ${{ steps.set-output-modules.outputs.modules }}
     steps:
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2.4.0
@@ -29,8 +27,6 @@ jobs:
           for modulename in "${modules[@]}"; do
             git clone --recursive git@gitee.com:shubci/${modulename%/*}.git
           done
-          modules_json=$(printf '%s\n' "${modules[@]}" | jq -R . | jq -s .)
-          echo "::set-output name=modules::$modules_json"
       - name: Create markdown file
         run: |
           cd libs
@@ -70,8 +66,8 @@ jobs:
       - name: BUILD AND INSTALL
         shell: bash
         run: |
-          modules_array=${{ needs.clone_repository.outputs.modules }}
-          modules=$(echo $modules_array | jq -r '.[]')
+          # modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager')
+          modules=( 'cjson' )
           cd libs/bin/${{matrix.config.path}}
           currentDirectory=$(pwd)
           cd ../../../module
