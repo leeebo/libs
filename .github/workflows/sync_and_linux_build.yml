@@ -19,7 +19,8 @@ jobs:
         id: set-output-modules
         shell: bash
         run: |
-          modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager')
+          # modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager')
+          modules=('cjson')
           git config --global user.name "robot"
           git config --global user.email "libo_go@163.com"
           git clone --recursive -b Lhz git@gitee.com:shubci/libs.git
@@ -112,30 +113,30 @@ jobs:
         with:
           name: cloned_libs
           path: libs
-  push_repository:
-    needs: process_repository
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-    - name: Download cloned_libs
-      uses: actions/download-artifact@v2
-      with:
-        name: cloned_libs
-        path: libs
-    - name: Install SSH Key
-      uses: shimataro/ssh-key-action@v2.4.0
-      with:
-        key: ${{ secrets.GITEE_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.KNOWN_HOSTS }}
-    - name: PUSH
-      run: |
-        cd libs
-        git config --global user.name "robot"
-        git config --global user.email "libo_go@163.com"
-        git status
-        git add --all && git status
-        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
-        git log
+  # push_repository:
+  #   needs: process_repository
+  #   runs-on: ubuntu-latest
+  #   if: always()
+  #   steps:
+  #   - name: Download cloned_libs
+  #     uses: actions/download-artifact@v2
+  #     with:
+  #       name: cloned_libs
+  #       path: libs
+  #   - name: Install SSH Key
+  #     uses: shimataro/ssh-key-action@v2.4.0
+  #     with:
+  #       key: ${{ secrets.GITEE_PRIVATE_KEY }}
+  #       known_hosts: ${{ secrets.KNOWN_HOSTS }}
+  #   - name: PUSH
+  #     run: |
+  #       cd libs
+  #       git config --global user.name "robot"
+  #       git config --global user.email "libo_go@163.com"
+  #       git status
+  #       git add --all && git status
+  #       git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
+  #       git log
 # on:
 #   schedule:
 #     - cron: '0 20 * * *'
