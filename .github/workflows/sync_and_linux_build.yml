@@ -63,6 +63,12 @@ jobs:
         with:
           name: cloned_module
           path: module
+      - name: Set up environment for Ubuntu
+        shell: bash
+        if: matrix.config.os == 'ubuntu-latest'
+        run: |
+          echo "$(pwd)/libs/bin/linux" | sudo tee -a /etc/ld.so.conf
+          sudo ldconfig
       - name: BUILD AND INSTALL
         shell: bash
         run: |
