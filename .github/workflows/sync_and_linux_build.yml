@@ -52,6 +52,7 @@ jobs:
           - {path: "mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
           - {path: "msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
           - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
+      max-parallel: 1
     steps:
       - name: Download cloned_libs
         uses: actions/download-artifact@v2
@@ -116,30 +117,30 @@ jobs:
         with:
           name: cloned_libs
           path: libs
-  # push_repository:
-  #   needs: process_repository
-  #   runs-on: ubuntu-latest
-  #   if: always()
-  #   steps:
-  #   - name: Download cloned_libs
-  #     uses: actions/download-artifact@v2
-  #     with:
-  #       name: cloned_libs
-  #       path: libs
-  #   - name: Install SSH Key
-  #     uses: shimataro/ssh-key-action@v2.4.0
-  #     with:
-  #       key: ${{ secrets.GITEE_PRIVATE_KEY }}
-  #       known_hosts: ${{ secrets.KNOWN_HOSTS }}
-  #   - name: PUSH
-  #     run: |
-  #       cd libs
-  #       git config --global user.name "robot"
-  #       git config --global user.email "libo_go@163.com"
-  #       git status
-  #       git add --all && git status
-  #       git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
-  #       git log
+  push_repository:
+    needs: process_repository
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Download cloned_libs
+      uses: actions/download-artifact@v2
+      with:
+        name: cloned_libs
+        path: libs
+    - name: Install SSH Key
+      uses: shimataro/ssh-key-action@v2.4.0
+      with:
+        key: ${{ secrets.GITEE_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.KNOWN_HOSTS }}
+    - name: PUSH
+      run: |
+        cd libs
+        git config --global user.name "robot"
+        git config --global user.email "libo_go@163.com"
+        git status
+        git add --all && git status
+        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
+        git log
 # on:
 #   schedule:
 #     - cron: '0 20 * * *'
