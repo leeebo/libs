@@ -7,17 +7,8 @@ on:
 jobs:
   clone_repository:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        module:
-          - 'cjson'
-          - 'osal'
-          - 'unittest'
-          - 'trial_manager'
-          - 'device_manager'
-          - 'data_manager'
-          - 'drivers'
+    outputs:
+      module: ${{ steps.set-output-modules.outputs.modules }}
     steps:
       - name: Install SSH Key
         uses: shimataro/ssh-key-action@v2.4.0
@@ -25,14 +16,20 @@ jobs:
           key: ${{ secrets.GITEE_PRIVATE_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
       - name: GIT-CLONE
+        id: set-output-modules
         shell: bash
         run: |
+          modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager')
           git config --global user.name "robot"
           git config --global user.email "libo_go@163.com"
-          git clone --recursive -b master git@gitee.com:shubci/libs.git
+          git clone --recursive -b Lhz git@gitee.com:shubci/libs.git
           mkdir module
           cd module
-          git clone --recursive git@gitee.com:shubci/${{ matrix.module }}.git
+          for modulename in "${modules[@]}"; do
+            git clone --recursive git@gitee.com:shubci/${modulename%/*}.git
+          done
+          modules_json=$(printf '%s\n' "${modules[@]}" | jq -R . | jq -s .)
+          echo "::set-output name=modules::$modules_json"
       - name: Create markdown file
         run: |
           cd libs
@@ -58,18 +55,6 @@ jobs:
           - {path: "mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
           - {path: "msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
           - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
-        module:
-          - 'cjson'
-          - 'osal'
-          - 'unittest'
-          - 'trial_manager'
-          - 'device_manager'
-          - 'data_manager'
-          - 'drivers/driver_eeg'
-          - 'drivers/robot'
-          - 'drivers/general'
-          - 'drivers/vr'
-      max-parallel: 1
     steps:
       - name: Download cloned_libs
         uses: actions/download-artifact@v2
@@ -84,60 +69,43 @@ jobs:
       - name: BUILD AND INSTALL
         shell: bash
         run: |
+          modules_array=${{ needs.clone_repository.outputs.modules }}
+          modules=$(echo $modules_array | jq -r '.[]')
           cd libs/bin/${{matrix.config.path}}
           currentDirectory=$(pwd)
-          cd ../../../module/${{ matrix.module }}
-          module_name=$(basename "$(pwd)")
-          cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log 
-          cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
+          cd ../../../module
+          modulepath=$(pwd)
+          for modulename in "${modules[@]}"; do
+              cd $modulename
+              # 编译
+              cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
+              # 安装
+              cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
+              # 判断libs内版本与module内版本是否一致
+              module_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+              available_version=$(grep "VERSION" ${currentDirectory}/${modulename##*/}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+              # 两个版本号不一致，表示编译失败，不进行后续测试
+              if [ "$available_version" != "$module_version" ]
+                then
+                  echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
+              else
+                  cd test
+                  cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
+                  cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log ||true
+                  if [ -d "bin" ]; then
+                      cd bin
+                      test_output=$(./build_test)
+                      tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+')
+                      failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+')
+                      ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+')
+                      echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | $tests | $failures | $ignored | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
+                  else
+                      echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
+                  fi
+              fi
+              cd $modulepath
+          done
           # cmake --build ./build --target package
-      - name: build result
-        if: always()
-        shell: bash
-        run: |
-          originalDirectory=$(pwd)
-          cd module/${{ matrix.module }}
-          module_name=$(basename "$(pwd)")
-          cd "$originalDirectory"
-          cd libs/bin/${{ matrix.config.path }}
-          available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-          new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-          cd ${originalDirectory}/libs
-          if [ "$available_version" != "$new_version" ]
-          then
-            echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${module_name}_${{ matrix.config.path }}.log) |" >> result.md
-          else
-            cd ../module/${{ matrix.module }}/test
-            cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
-            cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
-          fi
-      - name: unittest result
-        if: always()
-        shell: bash
-        run: |
-          originalDirectory=$(pwd)
-          cd module/${{ matrix.module }}
-          module_name=$(basename "$(pwd)")
-          cd "$originalDirectory"
-          cd libs/bin/${{ matrix.config.path }}
-          available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-          new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-          if [ "$available_version" == "$new_version" ]
-          then
-            cd ${originalDirectory}/module/${{ matrix.module }}/test
-            if [ -d "bin" ]; then
-              cd bin
-              test_output=$(./build_test)
-              tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+')
-              failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+')
-              ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+')
-              cd ${originalDirectory}/libs
-              echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | $tests | $failures | $ignored | [build information](/bin/${{ matrix.config.path }}/build_${module_name}_${{ matrix.config.path }}.log) |" >> result.md
-            else
-              cd ${originalDirectory}/libs
-              echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${module_name}_${{ matrix.config.path }}.log) |" >> result.md
-            fi
-          fi
       - name: Archive libs
         if: always()
         uses: actions/upload-artifact@v2
@@ -154,11 +122,6 @@ jobs:
       with:
         name: cloned_libs
         path: libs
-    - name: Download cloned_module
-      uses: actions/download-artifact@v2
-      with:
-        name: cloned_module
-        path: module
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2.4.0
       with:
@@ -171,5 +134,180 @@ jobs:
         git config --global user.email "libo_go@163.com"
         git status
         git add --all && git status
-        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin master
+        git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
         git log
+# on:
+#   schedule:
+#     - cron: '0 20 * * *'
+#   push:
+#     branches:
+#       - master
+# jobs:
+#   clone_repository:
+#     runs-on: ubuntu-latest
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         module:
+#           - 'cjson'
+#           - 'osal'
+#           - 'unittest'
+#           - 'trial_manager'
+#           - 'device_manager'
+#           - 'data_manager'
+#           - 'drivers'
+#     steps:
+#       - name: Install SSH Key
+#         uses: shimataro/ssh-key-action@v2.4.0
+#         with:
+#           key: ${{ secrets.GITEE_PRIVATE_KEY }}
+#           known_hosts: ${{ secrets.KNOWN_HOSTS }}
+#       - name: GIT-CLONE
+#         shell: bash
+#         run: |
+#           git config --global user.name "robot"
+#           git config --global user.email "libo_go@163.com"
+#           git clone --recursive -b master git@gitee.com:shubci/libs.git
+#           mkdir module
+#           cd module
+#           git clone --recursive git@gitee.com:shubci/${{ matrix.module }}.git
+#       - name: Create markdown file
+#         run: |
+#           cd libs
+#           echo "| module | compiler | available version | cmake result | tests_num | failures_num | ignored_num | build.log |" > result.md
+#           echo "| :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: |" >> result.md
+#       - name: Archive libs
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: cloned_libs
+#           path: libs
+#       - name: Archive module
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: cloned_module
+#           path: module
+#   process_repository:
+#     needs: clone_repository
+#     runs-on: ${{ matrix.config.os }}
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         config:
+#           - {path: "mingw", os: "windows-latest", command: "-G", compiler: "MinGW Makefiles"}
+#           - {path: "msvc", os: "windows-latest", command: "-G", compiler: "Visual Studio 17 2022"}
+#           - {path: "linux", os: "ubuntu-latest", command: "", compiler: ""}
+#         module:
+#           - 'cjson'
+#           - 'osal'
+#           - 'unittest'
+#           - 'trial_manager'
+#           - 'device_manager'
+#           - 'data_manager'
+#           - 'drivers/driver_eeg'
+#           - 'drivers/robot'
+#           - 'drivers/general'
+#           - 'drivers/vr'
+#       max-parallel: 1
+#     steps:
+#       - name: Download cloned_libs
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: cloned_libs
+#           path: libs
+#       - name: Download cloned_module
+#         uses: actions/download-artifact@v2
+#         with:
+#           name: cloned_module
+#           path: module
+#       - name: BUILD AND INSTALL
+#         shell: bash
+#         run: |
+#           cd libs/bin/${{matrix.config.path}}
+#           currentDirectory=$(pwd)
+#           cd ../../../module/${{ matrix.module }}
+#           module_name=$(basename "$(pwd)")
+#           cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log 
+#           cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
+#           # cmake --build ./build --target package
+#       - name: build result
+#         if: always()
+#         shell: bash
+#         run: |
+#           originalDirectory=$(pwd)
+#           cd module/${{ matrix.module }}
+#           module_name=$(basename "$(pwd)")
+#           cd "$originalDirectory"
+#           cd libs/bin/${{ matrix.config.path }}
+#           available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+#           new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+#           cd ${originalDirectory}/libs
+#           if [ "$available_version" != "$new_version" ]
+#           then
+#             echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${module_name}_${{ matrix.config.path }}.log) |" >> result.md
+#           else
+#             cd ../module/${{ matrix.module }}/test
+#             cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
+#             cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${module_name}_${{ matrix.config.path }}.log
+#           fi
+#       - name: unittest result
+#         if: always()
+#         shell: bash
+#         run: |
+#           originalDirectory=$(pwd)
+#           cd module/${{ matrix.module }}
+#           module_name=$(basename "$(pwd)")
+#           cd "$originalDirectory"
+#           cd libs/bin/${{ matrix.config.path }}
+#           available_version=$(grep "VERSION" ${module_name}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+#           new_version=$(grep "VERSION" ../../../module/${{ matrix.module }}/version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+#           if [ "$available_version" == "$new_version" ]
+#           then
+#             cd ${originalDirectory}/module/${{ matrix.module }}/test
+#             if [ -d "bin" ]; then
+#               cd bin
+#               test_output=$(./build_test)
+#               tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+')
+#               failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+')
+#               ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+')
+#               cd ${originalDirectory}/libs
+#               echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | $tests | $failures | $ignored | [build information](/bin/${{ matrix.config.path }}/build_${module_name}_${{ matrix.config.path }}.log) |" >> result.md
+#             else
+#               cd ${originalDirectory}/libs
+#               echo "| ${module_name} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${module_name}_${{ matrix.config.path }}.log) |" >> result.md
+#             fi
+#           fi
+#       - name: Archive libs
+#         if: always()
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: cloned_libs
+#           path: libs
+#   push_repository:
+#     needs: process_repository
+#     runs-on: ubuntu-latest
+#     if: always()
+#     steps:
+#     - name: Download cloned_libs
+#       uses: actions/download-artifact@v2
+#       with:
+#         name: cloned_libs
+#         path: libs
+#     - name: Download cloned_module
+#       uses: actions/download-artifact@v2
+#       with:
+#         name: cloned_module
+#         path: module
+#     - name: Install SSH Key
+#       uses: shimataro/ssh-key-action@v2.4.0
+#       with:
+#         key: ${{ secrets.GITEE_PRIVATE_KEY }}
+#         known_hosts: ${{ secrets.KNOWN_HOSTS }}
+#     - name: PUSH
+#       run: |
+#         cd libs
+#         git config --global user.name "robot"
+#         git config --global user.email "libo_go@163.com"
+#         git status
+#         git add --all && git status
+#         git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin master
+#         git log
