@@ -74,7 +74,9 @@ jobs:
         run: |
           # modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager')
           modules=( 'cjson' )
-          cd libs/bin/${{matrix.config.path}}
+          cd libs
+          resultpath=$(pwd)/result.md
+          cd bin/${{matrix.config.path}}
           currentDirectory=$(pwd)
           cd ../../../module
           modulepath=$(pwd)
