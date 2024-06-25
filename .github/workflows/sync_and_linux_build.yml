@@ -92,9 +92,9 @@ jobs:
                   if [ -d "bin" ]; then
                       cd bin
                       test_output=$(./build_test)
-                      tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+')
-                      failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+')
-                      ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+')
+                      tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+') || true
+                      failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+') || true
+                      ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+') || true
                       echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | $tests | $failures | $ignored | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
                   else
                       echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
