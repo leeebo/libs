@@ -25,7 +25,7 @@ jobs:
           cd module
           git clone --recursive -b Lhz git@gitee.com:shubci/cjson.git
           for modulename in "${modules[@]}"; do
-            git clone --recursive -b master git@gitee.com:shubci/${modulename%/*}.git
+              git clone --recursive -b master git@gitee.com:shubci/${modulename}.git
           done
       - name: Create markdown file
         run: |
