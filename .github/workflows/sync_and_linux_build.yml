@@ -17,7 +17,7 @@ jobs:
         id: set-output-modules
         shell: bash
         run: |
-          modules=( 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager' )
+          modules=( 'unittest' 'osal' 'device_manager' 'drivers' 'data_manager' 'algorithm_manager' )
           git config --global user.name "robot"
           git config --global user.email "libo_go@163.com"
           git clone --recursive -b Lhz git@gitee.com:shubci/libs.git
@@ -73,7 +73,7 @@ jobs:
       - name: BUILD AND INSTALL
         shell: bash
         run: |
-          modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager' )
+          modules=( 'cjson' 'unittest' 'osal' 'device_manager' 'drivers/driver_eeg' 'data_manager' 'algorithm_manager' )
           cd libs
           resultpath=$(pwd)/result.md
           cd bin/${{matrix.config.path}}
