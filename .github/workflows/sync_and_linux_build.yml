@@ -103,7 +103,7 @@ jobs:
                   cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log ||true
                   if [ -d "bin" ]; then
                       cd bin
-                      test_output=$(./build_test)
+                      test_output=$(./build_test || true)
                       tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+') || true
                       failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+') || true
                       ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+') || true
