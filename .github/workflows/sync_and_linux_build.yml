@@ -77,7 +77,7 @@ jobs:
       - name: BUILD AND INSTALL
         shell: bash
         run: |
-          modules=($(MODULES))
+          modules=($MODULES)
           cd libs
           resultpath=$(pwd)/result.md
           cd bin/${{matrix.config.path}}
