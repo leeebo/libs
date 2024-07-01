@@ -74,6 +74,8 @@ jobs:
         run: |
           echo "$(pwd)/libs/bin/linux" | sudo tee -a /etc/ld.so.conf
           sudo ldconfig
+          sudo apt-get update
+          sudo apt-get install libcurl4-openssl-dev
       - name: BUILD AND INSTALL
         shell: bash
         run: |
