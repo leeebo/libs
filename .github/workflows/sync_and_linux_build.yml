@@ -5,8 +5,8 @@ on:
     branches:
       - master
 env:
-  CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager'
-  MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager'
+  CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager'
+  MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager'
 jobs:
   clone_repository:
     runs-on: ubuntu-latest
