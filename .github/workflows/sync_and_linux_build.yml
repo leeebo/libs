@@ -120,7 +120,7 @@ jobs:
           # cmake --build ./build --target package
       - name: Archive libs
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: cloned_libs
           path: libs
@@ -130,7 +130,7 @@ jobs:
     if: always()
     steps:
     - name: Download cloned_libs
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: cloned_libs
         path: libs
