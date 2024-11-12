@@ -38,12 +38,12 @@ jobs:
           echo "| module | compiler | available version | cmake result | tests_num | failures_num | ignored_num | build.log |" > result.md
           echo "| :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: |" >> result.md
       - name: Archive libs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: cloned_libs
           path: libs
       - name: Archive module
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: cloned_module
           path: module
@@ -60,12 +60,12 @@ jobs:
       max-parallel: 1
     steps:
       - name: Download cloned_libs
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: cloned_libs
           path: libs
       - name: Download cloned_module
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: cloned_module
           path: module
