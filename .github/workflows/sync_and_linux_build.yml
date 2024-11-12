@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 env:
   CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
   MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
