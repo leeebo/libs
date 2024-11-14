@@ -100,7 +100,6 @@ jobs:
               if [ "$available_version" != "$module_version" ]
                 then
                   echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
-              else
                   if [ -f "./test/CMakeLists.txt" ]; then
                       cd test
                       cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
