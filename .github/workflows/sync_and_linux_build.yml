@@ -97,26 +97,27 @@ jobs:
               module_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
               available_version=$(grep "VERSION" ${currentDirectory}/${modulename##*/}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
               # 两个版本号不一致，表示编译失败，不进行后续测试
-              if [ "$available_version" != "$module_version" ]
-                then
+              if [ "$available_version" != "$module_version" ];then
                   echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
+              else
                   if [ -f "./test/CMakeLists.txt" ]; then
                       cd test
                       cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
                       cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log ||true
+                      if [ -d "bin" ];then
+                          cd bin
+                          test_output=$(./build_test || true)
+                          tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+') || true
+                          failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+') || true
+                          ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+') || true
+                          echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | $tests | $failures | $ignored | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
+                      else
+                          echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
+                      fi
                   else
                       echo "Skipping module $modulename: No CMakeLists.txt found in test directory
                   fi
-                  if [ -d "bin" ]; then
-                      cd bin
-                      test_output=$(./build_test || true)
-                      tests=$(echo "$test_output" | grep -o '[0-9]\+ Tests' | grep -o '[0-9]\+') || true
-                      failures=$(echo "$test_output" | grep -o '[0-9]\+ Failures' | grep -o '[0-9]\+') || true
-                      ignored=$(echo "$test_output" | grep -o '[0-9]\+ Ignored' | grep -o '[0-9]\+') || true
-                      echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | $tests | $failures | $ignored | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
-                  else
-                      echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
-                  fi
+                  
               fi
               cd $modulepath
           done
