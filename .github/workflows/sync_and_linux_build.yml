@@ -147,16 +147,13 @@ jobs:
     - name: PUSH
       run: |
         cd libs
-        if [ -d ".git" ]; then
-            git config --global user.name "robot"
-            git config --global user.email "libo_go@163.com"
-            git status
-            git add --all && git status
-            git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
-            git log
-        else
-            git init
-        fi
+          git config --global user.name "robot"
+          git config --global user.email "libo_go@163.com"
+          git status
+          git add --all && git status
+          git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin Lhz
+          git log
+      
 # on:
 #   schedule:
 #     - cron: '0 20 * * *'
