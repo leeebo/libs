@@ -115,7 +115,7 @@ jobs:
                           echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
                       fi
                   else
-                      echo "Skipping module $modulename: No CMakeLists.txt found in test directory
+                      echo "Skipping module $modulename: No CMakeLists.txt found in test directory"
                   fi
                   
               fi
