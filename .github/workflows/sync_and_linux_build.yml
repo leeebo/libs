@@ -101,9 +101,13 @@ jobs:
                 then
                   echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
               else
-                  cd test
-                  cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
-                  cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log ||true
+                  if [ -f "./test/CMakeLists.txt" ]; then
+                      cd test
+                      cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
+                      cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log ||true
+                  else
+                      echo "Skipping module $modulename: No CMakeLists.txt found in test directory
+                  fi
                   if [ -d "bin" ]; then
                       cd bin
                       test_output=$(./build_test || true)
