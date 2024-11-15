@@ -6,10 +6,10 @@ on:
       - master
   workflow_dispatch:
 env:
-  #CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
-  #MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
-  CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager'
-  MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager'
+  CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
+  MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
+  #CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager'
+  #MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager'
 jobs:
   clone_repository:
     runs-on: ubuntu-latest
@@ -91,18 +91,18 @@ jobs:
           modulepath=$(pwd)
           for modulename in "${modules[@]}"; do
               cd $modulename
-              # 编译
-              cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
-              # 安装
-              cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
-              # 判断libs内版本与module内版本是否一致
-              module_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-              available_version=$(grep "VERSION" ${currentDirectory}/${modulename##*/}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
-              # 两个版本号不一致，表示编译失败，不进行后续测试
-              if [ "$available_version" != "$module_version" ];then
-                  echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
-              else
-                  if [ -f "./test/CMakeLists.txt" ]; then
+              if [ -f "./test/CMakeLists.txt" ]; then
+                  # 编译
+                  cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
+                  # 安装
+                  cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
+                  # 判断libs内版本与module内版本是否一致
+                  module_version=$(grep "VERSION" version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+                  available_version=$(grep "VERSION" ${currentDirectory}/${modulename##*/}_${{ matrix.config.path }}_version.txt | cut -d' ' -f2 | tr '\n' '.' | sed 's/\.$//')
+                  # 两个版本号不一致，表示编译失败，不进行后续测试
+                  if [ "$available_version" != "$module_version" ];then
+                      echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:red">&#x274C; failed</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
+                  else
                       cd test
                       cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
                       cmake --build ./build --target install 2>&1 | tee -a ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log ||true
@@ -116,9 +116,9 @@ jobs:
                       else
                           echo "| ${modulename##*/} | ${{ matrix.config.path}} | $available_version | <span style="color:green">&#x2705; succeeded</span> | - | - | - | [build information](/bin/${{ matrix.config.path }}/build_${modulename##*/}_${{ matrix.config.path }}.log) |" >> ${resultpath}
                       fi
-                  else
-                      echo "Skipping module $modulename: No CMakeLists.txt found in test directory"
                   fi
+              else
+                  echo "Skipping module $modulename: No CMakeLists.txt found in test directory"
               fi
               cd $modulepath
           done
