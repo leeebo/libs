@@ -139,6 +139,11 @@ jobs:
       with:
         name: cloned_libs
         path: libs
+    - name: Download cloned_module
+      uses: actions/download-artifact@v3
+      with:
+       name: cloned_module
+       path: module
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2.4.0
       with:
@@ -146,14 +151,14 @@ jobs:
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
     - name: PUSH
       run: |
-        cd libs
+        cd ..
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
         git status
         git add --all && git status
-        #git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin master #LHZ
         git commit -m "ci: auto build   & publish" && git config pull.rebase true && git pull && git push origin Lhz
         git log
+#git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin LHZ
 # on:
 #   schedule:
 #     - cron: '0 20 * * *'
