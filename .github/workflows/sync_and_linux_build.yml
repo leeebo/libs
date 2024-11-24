@@ -8,8 +8,6 @@ on:
 env:
   CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
   MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
-  #CLONE_MODULES: 'unittest trial_manager device_manager drivers/driver_eeg data_manager'
-  #MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager'
 jobs:
   clone_repository:
     runs-on: ubuntu-latest
@@ -151,7 +149,7 @@ jobs:
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
     - name: PUSH
       run: |
-        cd ..
+        cd shubci/libs
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
         git status
