@@ -150,6 +150,7 @@ jobs:
     - name: PUSH
       run: |
         cd libs
+        git config --global url."https://".insteadOf git://
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
         git status
