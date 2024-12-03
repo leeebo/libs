@@ -147,6 +147,8 @@ jobs:
       with:
         key: ${{ secrets.GITEE_PRIVATE_KEY }}
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
+    - name: Use pwd to print the current directory
+      run: pwd
     - name: PUSH
       run: |
         cd libs
