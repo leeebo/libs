@@ -147,17 +147,14 @@ jobs:
       with:
         key: ${{ secrets.GITEE_PRIVATE_KEY }}
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
-    - name: Use pwd to print the current directory
-      run: pwd
     - name: PUSH
       run: |
-        cd libs
-        git config --global url."https://".insteadOf git://
         git config --global user.name "robot"
         git config --global user.email "libo_go@163.com"
         git status
         git add --all && git status
         git commit -m "ci: auto build   & publish" && git config pull.rebase true && git pull && git push origin Lhz
+        git push https://$GITEE_TOKEN@$GITEE_REPO.git master
         git log
 #git commit -m "ci: auto build ${{matrix.config.os}} ${{matrix.config.path}} & publish" && git config pull.rebase true && git pull && git push origin LHZ
 # on:
