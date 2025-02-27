@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 env:
   CLONE_MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
   MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
@@ -89,6 +90,12 @@ jobs:
           modulepath=$(pwd)
           for modulename in "${modules[@]}"; do
               cd $modulename
+              if [ ! -f "CMakeLists.txt" ]; then
+                echo "Warning: CMakeLists.txt not found in the current directory. Skipping this module..."
+                echo "| ${modulename##*/} | ${{ matrix.config.path}} | - | <span style=\"color:orange\">&#x27A1; skipped</span> | - | - | - | - |" >> ${resultpath}
+                cd $modulepath  
+                continue  
+              fi
               # 编译
               cmake ${{matrix.config.command}} "${{matrix.config.compiler}}" -S . -B ./build 2>&1 | tee ${currentDirectory}/build_${modulename##*/}_${{ matrix.config.path }}.log || true
               # 安装
