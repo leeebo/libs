@@ -39,13 +39,13 @@ jobs:
       - name: Archive libs
         uses: actions/upload-artifact@v4.6.0
         with:
-          name: cloned_libs_${{ github.run_id }}
+          name: cloned_libs
           include-hidden-files: true
           path: libs
       - name: Archive module
         uses: actions/upload-artifact@v4.6.0
         with:
-          name: cloned_libs_${{ github.run_id }}
+          name: cloned_module
           include-hidden-files: true
           path: module
   process_repository:
@@ -129,7 +129,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4.6.0
         with:
-          name: cloned_libs_${{ github.run_id }}
+          name: cloned_libs_build
           include-hidden-files: true
           path: libs
   push_repository:
@@ -140,7 +140,7 @@ jobs:
     - name: Download cloned_libs
       uses: actions/download-artifact@v4.1.8
       with:
-        name: cloned_libs_${{ github.run_id }}
+        name: cloned_libs_build
         path: libs
     - name: Install SSH Key
       uses: shimataro/ssh-key-action@v2.4.0
