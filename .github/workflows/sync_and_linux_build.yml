@@ -9,16 +9,6 @@ env:
   CLONE_MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
   MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
 jobs:
-  clean_artifacts:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete all artifacts
-        uses: christian-korneck/delete-run-artifacts-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          parent_runid: ${{ github.run_id }}
-          parent_repo: ${{ github.repository }}
   clone_repository:
     runs-on: ubuntu-latest
     steps:
@@ -46,6 +36,28 @@ jobs:
           cd libs
           echo "| module | compiler | available version | cmake result | tests_num | failures_num | ignored_num | build.log |" > result.md
           echo "| :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: |" >> result.md
+      
+      - name: Delete existing artifacts with the same name
+        run: |
+          REPO=${{ github.repository }}
+          RUN_ID=${{ github.run_id }}
+          TOKEN=${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_NAME="cloned_libs"
+
+          # 获取当前 workflow run 的所有 artifact 列表
+          ARTIFACTS=$(curl -s -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/artifacts")
+
+          # 提取所有同名 artifact 的 ID
+          ARTIFACT_IDS=$(echo $ARTIFACTS | jq -r --arg ARTIFACT_NAME "$ARTIFACT_NAME" '.artifacts[] | select(.name == $ARTIFACT_NAME) | .id')
+
+          # 删除所有同名 artifact
+          for ID in $ARTIFACT_IDS; do
+            if [ -n "$ID" ]; then
+              curl -X DELETE -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/$REPO/actions/artifacts/$ID"
+              echo "Deleted artifact with ID: $ID"
+            fi
+          done
+          
       - name: Archive libs
         uses: actions/upload-artifact@v4.6.0
         with:
