@@ -9,6 +9,16 @@ env:
   CLONE_MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
   MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
 jobs:
+  clean_artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all artifacts
+        uses: christian-korneck/delete-run-artifacts-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          parent_runid: ${{ github.run_id }}
+          parent_repo: ${{ github.repository }}
   clone_repository:
     runs-on: ubuntu-latest
     steps:
