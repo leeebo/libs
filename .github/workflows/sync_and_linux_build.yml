@@ -36,39 +36,17 @@ jobs:
           cd libs
           echo "| module | compiler | available version | cmake result | tests_num | failures_num | ignored_num | build.log |" > result.md
           echo "| :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: |" >> result.md
-      
-      - name: Delete existing artifacts with the same name
-        run: |
-          REPO=${{ github.repository }}
-          RUN_ID=${{ github.run_id }}
-          TOKEN=${{ secrets.GITHUB_TOKEN }}
-          ARTIFACT_NAME="cloned_libs"
-
-          # 获取当前 workflow run 的所有 artifact 列表
-          ARTIFACTS=$(curl -s -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/artifacts")
-
-          # 提取所有同名 artifact 的 ID
-          ARTIFACT_IDS=$(echo $ARTIFACTS | jq -r --arg ARTIFACT_NAME "$ARTIFACT_NAME" '.artifacts[] | select(.name == $ARTIFACT_NAME) | .id')
-
-          # 删除所有同名 artifact
-          for ID in $ARTIFACT_IDS; do
-            if [ -n "$ID" ]; then
-              curl -X DELETE -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/$REPO/actions/artifacts/$ID"
-              echo "Deleted artifact with ID: $ID"
-            fi
-          done
           
       - name: Archive libs
         uses: actions/upload-artifact@v4.6.0
         with:
-          name: cloned_libs
+          name: cloned_libs_${{ github.run_id }}
           include-hidden-files: true
           path: libs
-          overwrite: true
       - name: Archive module
         uses: actions/upload-artifact@v4.6.0
         with:
-          name: cloned_module
+          name: cloned_module_${{ github.run_id }}
           include-hidden-files: true
           path: module
   process_repository:
@@ -86,12 +64,12 @@ jobs:
       - name: Download cloned_libs
         uses: actions/download-artifact@v4.1.8
         with:
-          name: cloned_libs
+          name: cloned_libs_${{ github.run_id }}
           path: libs
       - name: Download cloned_module
         uses: actions/download-artifact@v4.1.8
         with:
-          name: cloned_module
+          name: cloned_module_${{ github.run_id }}
           path: module
       - name: Set up environment for Ubuntu
         shell: bash
@@ -155,6 +133,8 @@ jobs:
           name: cloned_libs_build
           include-hidden-files: true
           path: libs
+          if-no-files-found: warn
+          overwrite: true
   push_repository:
     needs: process_repository
     runs-on: ubuntu-latest
