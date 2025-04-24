@@ -8,7 +8,16 @@ on:
 env:
   CLONE_MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
   MODULES: 'cjson unittest osal trial_manager device_manager drivers/driver_eeg data_manager algorithm_manager algorithm_filter'
+
 jobs:
+  remove-old-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '7 days' 
+          
   clone_repository:
     runs-on: ubuntu-latest
     steps:
